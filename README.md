@@ -1,4 +1,4 @@
-# Oogstvoorspellingen
+#Arcgos Satellite API
 
 ## Note to contributors:
 Please head on over to the GIT Wiki and check out the [workflow](https://github.com/BB8-2020/FARM2.0/wiki/Workflow)
