@@ -7,12 +7,12 @@ from matplotlib.pyplot import imread, imsave
 class Satellite_data():
     def __init__(self):
         self.notfound = imread("data/not_found.jpeg")
-        
+        self.notfound_avg = self.notfound.mean(axis=0).mean(axis=0)[0:3]
     def download_tile(self, lat, lon):    
         if not os.path.isdir("data/images"):
             os.mkdir('data/images')
 
-        image, tile_x, tile_y, zoom = self.get_zoom_level_image(lat, lon, 21)
+        image, tile_x, tile_y, zoom = self.get_zoom_level_image(lat, lon, 23)
 
         filename = f'data/images/{tile_x}_{tile_y}_{zoom}.jpeg'
         local_file = open(filename, 'wb')
@@ -36,11 +36,12 @@ class Satellite_data():
 
         image_url = f"https://services.arcgisonline.com/arcgis/rest/services/World_Imagery/MapServer/tile/{zoom}/{tile_y}/{tile_x}"
         with urlopen(image_url) as image_file:
-            image = imread(image_file, "jpg")
-
-            print(image == self.notfound)
-            if image.mean() == self.notfound.mean():
+            image = imread(image_file, "jpeg")
+            
+            img_average = image.mean(axis=0).mean(axis=0)[0:3]
+            if all(img_average == self.notfound_avg):
                 return self.get_zoom_level_image(lat, lon, zoom - 1)
+            
             return (image, tile_x, tile_y, zoom)
 
     def long_to_tile_X(self, lon, zoom):
@@ -60,6 +61,7 @@ class Satellite_data():
         top_left = self.num2deg(tile_x, tile_y, zoom)
         right_bottom = self.num2deg(tile_x + 1, tile_y + 1, zoom)
         return (top_left, right_bottom)
+
 
 if __name__ == "__main__":
     sd = Satellite_data()

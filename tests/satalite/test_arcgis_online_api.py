@@ -1,10 +1,10 @@
 # %%
-from harvest.satellite import google_api 
+from harvest.satellite import google_api
 import unittest
 
 
 class TestGoogleApi(unittest.TestCase):
     def test__google(self):
-        assert False
+        assert sat.image is not None
 
 # %%
