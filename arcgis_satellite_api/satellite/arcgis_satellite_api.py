@@ -8,8 +8,9 @@ class Satellite_data():
 
     def __init__(self):
         """ Constructor method, registers the not found image + average
-        """                
-        self.notfound = imread("data/not_found.jpeg")
+        """ 
+        self.data_folder = "data/" if os.path.isdir("data") else "arcgis_satellite_api/satellite/data/"
+        self.notfound = imread(self.data_folder + "not_found.jpeg")
         self.notfound_avg = self.notfound.mean(axis=0).mean(axis=0)[0:3]
     
     def download_tile(self, lat, lon):
@@ -21,14 +22,14 @@ class Satellite_data():
         :type lon: float
         :return: Dictionary with filename of downloaded image, top left & right bottom bound in (lat,lon) values and zoom level.
         :rtype: dict
-        """        
+        """                      
 
-        if not os.path.isdir("data/images"):
-            os.mkdir('data/images')
+        if not os.path.isdir(f"{self.data_folder}images"):
+            os.mkdir(f"{self.data_folder}images")
 
         image, tile_x, tile_y, zoom = self.get_zoom_level_image(lat, lon, 23)
 
-        filename = f'data/images/{tile_x}_{tile_y}_{zoom}.jpeg'
+        filename = f"{self.data_folder}images/{tile_x}_{tile_y}_{zoom}.jpeg"
         local_file = open(filename, 'wb')
         imsave(local_file, image)
 
