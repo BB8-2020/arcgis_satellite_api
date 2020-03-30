@@ -9,7 +9,7 @@ class Satellite_data():
     def __init__(self):
         """ Constructor method, registers the not found image + average
         """ 
-        self.data_folder = "data/" if os.path.isdir("data") else "arcgis_satellite_api/satellite/data/"
+        self.data_folder = '\\'.join(__file__.split('\\')[:-1]) + "\data\\"
         self.notfound = imread(self.data_folder + "not_found.jpeg")
         self.notfound_avg = self.notfound.mean(axis=0).mean(axis=0)[0:3]
     
