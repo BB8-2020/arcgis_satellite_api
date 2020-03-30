@@ -29,7 +29,7 @@ class Satellite_data():
 
         image, tile_x, tile_y, zoom = self.get_zoom_level_image(lat, lon, 23)
 
-        filename = f"{self.data_folder}images/{tile_x}_{tile_y}_{zoom}.jpeg"
+        filename = f"{self.data_folder}images\\{tile_x}_{tile_y}_{zoom}.jpeg"
         local_file = open(filename, 'wb')
         imsave(local_file, image)
 
