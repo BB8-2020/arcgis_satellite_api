@@ -133,4 +133,4 @@ dmypy.json
 
 .vscode/
 config_files/*
-data/
+images/
