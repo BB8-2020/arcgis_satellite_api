@@ -13,7 +13,7 @@ class Satellite_data():
         self.notfound = imread(self.data_folder + "not_found.jpeg")
         self.notfound_avg = self.notfound.mean(axis=0).mean(axis=0)[0:3]
     
-    def download_tile(self, lat, lon):
+    def download_tile(self, lat, lon, zoom=23):
         """ Download a tile from the Arcgis World Imagery API.
         
         :param lat: Latitude value from desired tile.
@@ -27,9 +27,9 @@ class Satellite_data():
         if not os.path.isdir(f"{self.data_folder}images"):
             os.mkdir(f"{self.data_folder}images")
 
-        image, tile_x, tile_y, zoom = self.get_zoom_level_image(lat, lon, 23)
+        image, tile_x, tile_y, zoom = self.get_zoom_level_image(lat, lon, zoom=23)
 
-        filename = f"{self.data_folder}images\\{tile_x}_{tile_y}_{zoom}.jpeg"
+        filename = f"{self.data_folder}images/{tile_x}_{tile_y}_{zoom}.jpeg"
         local_file = open(filename, 'wb')
         imsave(local_file, image)
 
