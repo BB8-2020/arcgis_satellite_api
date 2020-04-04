@@ -23,7 +23,7 @@ class Satellite_data():
         :type lat: float
         :param lon: Longitude value from desired tile.
         :type lon: float
-        :return: Dictionary with filename of downloaded image, top left & right bottom bound in (lat,lon) values and zoom level.
+        :return: Dictionary with filename of downloaded image, top left & right bottom bound in (lat,lon) values, pixel where given coordinate is located (x,y) and zoom level.
         :rtype: dict
         """
 
@@ -39,7 +39,7 @@ class Satellite_data():
 
         bound_top_left, bound_bottom_right = self.get_bounds(
             tile_x, tile_y, zoom)
-        coordinate_pixel_x, coordinate_pixel_y = self.get_pixel_val((lat,lon,),
+        coordinate_pixel_x, coordinate_pixel_y = self.get_pixel_location((lat,lon,),
             bound_top_left, bound_bottom_right)
         
         return {
@@ -144,7 +144,20 @@ class Satellite_data():
         bottom_right = self.get_top_left_bound(tile_x + 1, tile_y + 1, zoom)
         return (top_left, bottom_right)
 
-    def get_pixel_val(self, loc, bound_top_left, bound_bottom_right, img_size=256):
+    def get_pixel_location(self, loc, bound_top_left, bound_bottom_right, img_size=256):
+        """ Get pixel location of given  (lat,lon) location in given bounds
+        
+        :param loc: Latitude and Longitude to get pixel location for.
+        :type loc: tuple
+        :param bound_top_left: Top left bound, latitude and longitude
+        :type bound_top_left: tuple
+        :param bound_bottom_right: Right bottom bound, latitude and longitude
+        :type bound_bottom_right: tuple
+        :param img_size: image resolution in pixels, defaults to 256
+        :type img_size: int, optional
+        :return: Location in pixels of given coordinate
+        :rtype: int, int
+        """        
         x_top, y_left = bound_top_left
         x_bottom, y_right = bound_bottom_right
 
@@ -160,9 +173,3 @@ class Satellite_data():
         pixel_y = math.floor((dist_y_left / y_range) * img_size)
 
         return pixel_x, pixel_y
-
-
-if __name__ == "__main__":
-    sat = Satellite_data()
-    data = sat.download_tile(52.200523, 5.413112)
-    print(data)
