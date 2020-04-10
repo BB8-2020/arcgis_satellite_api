@@ -13,6 +13,7 @@ setup(
     author_email='berry.hijwegen@student.hu.nl',
     package_dir={"": "."},
     packages=find_packages(),
+    package_data={'arcgis_satellite_api': ['satellite/data/not_found.jpeg']},
     include_package_data=True,
     install_requires=install_requires,
     dependency_links=[
