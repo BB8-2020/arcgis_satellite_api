@@ -50,8 +50,10 @@ class Satellite_data():
 
         bound_top_left, bound_bottom_right = self.get_bounds(
             tile_x, tile_y, zoom)
+
         coordinate_pixel_x, coordinate_pixel_y = self.get_pixel_location((lat, lon,),
                                                                          bound_top_left, bound_bottom_right)
+
 
         return {
             'filename': filename,
@@ -105,7 +107,7 @@ class Satellite_data():
             return (image, tile_x, tile_y, zoom)
 
     def long_to_tile_X(self, lon, zoom):
-        """Calculate tile x-value based on longitude and zoom value
+        """Calculate tile x-value based on longitude and zoom value.
 
         :param lon: Longitude value.
         :type lon: float
@@ -114,18 +116,19 @@ class Satellite_data():
         :return: Tile x-value
         :rtype: int
         """
-        return math.floor((lon+180) / 360*math.pow(2, zoom))
+        return math.floor((lon + 180) / 360 * math.pow(2, zoom))
 
     def lat_to_tile_Y(self, lat, zoom):
-        """Calculate tile y-value based on latitude and zoom value
+        """Calculate tile y-value based on latitude and zoom value.
 
-        :param lon: Latitude value.
-        :type lon: float
+        :param lat: Latitude value.
+        :type lat: float
         :param zoom: Zoom level.
         :type zoom: int
         :return: Tile y-value
         :rtype: int
         """
+
         return math.floor((1-math.log(math.tan(lat*math.pi/180) + 1/math.cos(lat*math.pi/180))/math.pi)/2 * math.pow(2, zoom))
 
     def get_top_left_bound(self, tile_x, tile_y, zoom):
@@ -147,7 +150,7 @@ class Satellite_data():
         return (lat_deg, lon_deg)
 
     def get_bounds(self, tile_x, tile_y, zoom):
-        """Get bounds of image with defined tile x-value and y-value
+        """Get bounds of image with defined tile x-value and y-value.
 
         :param tile_x: Tile x value. Can be calculated with `long_to_tile_X`.
         :type tile_x: int

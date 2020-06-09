@@ -3,6 +3,7 @@ import sys
 EXAMPLES_FOLDER = os.path.abspath(os.path.join(__file__, os.pardir))
 PROJECT_ROOT = os.path.abspath(os.path.join(EXAMPLES_FOLDER, os.pardir))
 sys.path.append(PROJECT_ROOT)
+
 from arcgis_satellite_api.satellite import arcgis_satellite_api as sat
 
 
