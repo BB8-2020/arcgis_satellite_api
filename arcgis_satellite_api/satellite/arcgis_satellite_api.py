@@ -42,7 +42,7 @@ class Satellite_data():
             os.mkdir(f"{self.data_folder}images")
 
         image, tile_x, tile_y, zoom = self.get_zoom_level_image(
-            lat, lon, zoom=23, map_type=map_type)
+            lat, lon, zoom=zoom, map_type=map_type)
 
         filename = f"{self.data_folder}images/{map_type}_{tile_x}_{tile_y}_{zoom}.jpeg"
         local_file = open(filename, 'wb')
