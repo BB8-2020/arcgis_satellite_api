@@ -188,12 +188,12 @@ class Satellite_data():
 
 
     def get_box_lat_lng(self, box, bound_top_left, bound_bottom_right):
-        top_left = get_lat_lng_from_pixel(
+        top_left = self.get_lat_lng_from_pixel(
             { 'x': box['x1'], 'y': box['y1'] },
             bound_top_left,
             bound_bottom_right,
         );
-        bottom_right = get_lat_lng_from_pixel(
+        bottom_right = self.get_lat_lng_from_pixel(
             { 'x': box['x2'], 'y': box['y2'] },
             bound_top_left,
             bound_bottom_right,
