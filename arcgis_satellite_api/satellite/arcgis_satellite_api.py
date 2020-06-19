@@ -199,15 +199,16 @@ class Satellite_data():
             bound_bottom_right,
         );
 
-        return [
-            [
-                top_left['lat'],
-                top_left['lon'],
-            ], [
-                bottom_right['lat'],
-                bottom_right['lon'],
-            ],
-        ];
+        return {
+            'top_left': {
+                'lat': top_left['lat'],
+                'lon': top_left['lon'],
+            },
+            'bottom_right': {
+                'lat': bottom_right['lat'],
+                'lon': bottom_right['lon'],
+            }
+        }
 
 
     def get_pixel_location(self, loc, bound_top_left, bound_bottom_right, img_size=256):
