@@ -165,6 +165,51 @@ class Satellite_data():
         bottom_right = self.get_top_left_bound(tile_x + 1, tile_y + 1, zoom)
         return (top_left, bottom_right)
 
+
+    def get_lat_lng_from_pixel(self, loc, bound_top_left, bound_bottom_right, img_size=256):
+        x_left = bound_top_left['lon'];
+        y_top = bound_top_left['lat'];
+        x_right = bound_bottom_right['lon'];
+        y_bottom = bound_bottom_right['lat'];
+
+        x_range = abs(x_right - x_left);
+        y_range = abs(y_top - y_bottom);
+
+        x = loc['x']
+        y = loc['y']
+
+        lon = x_left + ((x / img_size) * x_range);
+        lat = y_bottom - ((y / img_size) * y_range);
+
+        return {
+            'lat': lat,
+            'lon': lon,
+        };
+
+
+    def get_box_lat_lng(self, box, bound_top_left, bound_bottom_right):
+        top_left = get_lat_lng_from_pixel(
+            { 'x': box['x1'], 'y': box['y1'] },
+            bound_top_left,
+            bound_bottom_right,
+        );
+        bottom_right = get_lat_lng_from_pixel(
+            { 'x': box['x2'], 'y': box['y2'] },
+            bound_top_left,
+            bound_bottom_right,
+        );
+
+        return [
+            [
+                top_left['lat'],
+                top_left['lon'],
+            ], [
+                bottom_right['lat'],
+                bottom_right['lon'],
+            ],
+        ];
+
+
     def get_pixel_location(self, loc, bound_top_left, bound_bottom_right, img_size=256):
         """ Get pixel location of given  (lat,lon) location in given bounds
 
