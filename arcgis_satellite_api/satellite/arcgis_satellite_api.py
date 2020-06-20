@@ -19,9 +19,10 @@ class Satellite_data():
             'world_hillshade': 'Elevation/World_Hillshade',
             'world_hillshade_dark': 'Elevation/World_Hillshade_Dark'
         }
-        self.data_folder = '/'.join(__file__.replace('\\',
-                                                     '/').split('/')[:-1]) + "/data/"
-        with open(self.data_folder + "not_found_base64.txt") as not_found_img:
+
+        cwd = os.path.dirname(os.path.abspath(__file__))
+        self.data_folder = os.path.join(cwd, 'data')
+        with open(os.path.join(self.data_folder, 'not_found_base64.txt')) as not_found_img:
             self.not_found_img = not_found_img.read()
 
     def convert_base64_to_np_array(self, base64_img):
