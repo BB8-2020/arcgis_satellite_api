@@ -1,16 +1,18 @@
+import base64
 import math
 import os
-from urllib.request import urlopen
+from io import BytesIO
 
-from matplotlib.pyplot import imread, imsave
+from PIL import Image
+import numpy as np
+import requests
 
 
 class Satellite_data():
-    """ Class to reach the Arcgis World Imagery Web API."""
+    """ Class to reach the Arcgis World Imagery Web API. """
 
     def __init__(self):
-        """ Constructor method, registers the not found image + average
-        """
+        """ Constructor method, registers the not found image. """
         self.base_url = "https://server.arcgisonline.com/arcgis/rest/services"
         self.tile_maps = {
             'world_imagery': 'World_Imagery',
@@ -19,10 +21,29 @@ class Satellite_data():
         }
         self.data_folder = '/'.join(__file__.replace('\\',
                                                      '/').split('/')[:-1]) + "/data/"
-        self.notfound = imread(self.data_folder + "not_found.jpeg")
-        self.notfound_avg = self.notfound.mean(axis=0).mean(axis=0)[0:3]
+        with open(self.data_folder + "not_found_base64.txt") as not_found_img:
+            self.not_found_img = not_found_img.read()
 
-    def download_tile(self, lat, lon, zoom=23, map_type="world_imagery"):
+    def convert_base64_to_np_array(self, base64_img):
+        """ Converts a base64 string to a np array.
+
+        An image is provided in base64 form, this is decoded into a decoded string.
+        This value is then passed into a BytesIO which transforms it into a bytes object.
+        The bytes object is then finally read by PIL and converted to an RGB numpy array.
+        Lastly the numpy array is transformed from RGB to BGR since our model expects these inputs.
+
+        :param base64_img: An image in base64 string form.
+        :type base64_img: string
+        :return: A numpy BGR image array
+        :rtype: np.array
+        """
+        msg = base64.b64decode(base64_img)
+        buf = BytesIO(msg)
+        image = np.asarray(Image.open(buf).convert('RGB'))
+        image[:, :, ::-1].copy()
+        return image
+
+    def download_tile(self, lat, lon, zoom=23, map_type="world_imagery", as_base64=False):
         """ Download a tile from the Arcgis World Imagery API.
 
         :param lat: Latitude value from desired tile.
@@ -31,32 +52,38 @@ class Satellite_data():
         :type lon: float
         :param zoom: Zoom level of desired tile.
         :type zoom: int
-        :param map_type: Desired map type, currently supports: world_imagery, world_hillshade, world_hillshade_dark. (http://server.arcgisonline.com/arcgis/rest/services/)
+        :param map_type: Desired map type, currently supports:
+            world_imagery,
+            world_hillshade,
+            world_hillshade_dark. (http://server.arcgisonline.com/arcgis/rest/services/)
         :type map_type: str
+        :param zoom: Whether to return a base64 sring or save as local image.
+        :type zoom: boolean
         :return: Dictionary with filename of downloaded image,
             top left & right bottom bound in (lat,lon) values, pixel where given coordinate is located (x,y) and zoom level.
         :rtype: dict
         """
 
-        if not os.path.isdir(f"{self.data_folder}images"):
-            os.mkdir(f"{self.data_folder}images")
-
         image, tile_x, tile_y, zoom = self.get_zoom_level_image(
-            lat, lon, zoom=zoom, map_type=map_type)
-
-        filename = f"{self.data_folder}images/{map_type}_{tile_x}_{tile_y}_{zoom}.jpeg"
-        local_file = open(filename, 'wb')
-        imsave(local_file, image)
+            lat,
+            lon,
+            zoom=zoom,
+            map_type=map_type
+        )
 
         bound_top_left, bound_bottom_right = self.get_bounds(
-            tile_x, tile_y, zoom)
+            tile_x,
+            tile_y,
+            zoom
+        )
 
-        coordinate_pixel_x, coordinate_pixel_y = self.get_pixel_location((lat, lon,),
-                                                                         bound_top_left, bound_bottom_right)
+        coordinate_pixel_x, coordinate_pixel_y = self.get_pixel_location(
+            loc=(lat, lon,),
+            bound_top_left=bound_top_left,
+            bound_bottom_right=bound_bottom_right
+        )
 
-
-        return {
-            'filename': filename,
+        tile_data = {
             'bounds': {
                 'top_left': bound_top_left,
                 'bottom_right': bound_bottom_right,
@@ -68,6 +95,20 @@ class Satellite_data():
             'zoom': zoom
         }
 
+        if not as_base64:
+            if not os.path.isdir(f"{self.data_folder}images"):
+                os.mkdir(f"{self.data_folder}images")
+
+            filename = f"{self.data_folder}images/{map_type}_{tile_x}_{tile_y}_{zoom}.jpeg"
+            with open(filename, 'wb') as f:
+                f.write(base64.b64decode(image))
+
+            tile_data['filename'] = filename
+        else:
+            tile_data['base64'] = image
+
+        return tile_data
+
     def get_zoom_level_image(self, lat, lon, zoom, map_type="world_imagery"):
         """ Get a tile from the Arcgis World Imagery API with desired zoomlevel.
 
@@ -77,16 +118,18 @@ class Satellite_data():
         :type lon: float
         :param zoom: Zoom level of desired tile.
         :type zoom: int
-        :param map_type: Desired map type, currently supports: world_imagery, world_hillshade, world_hillshade_dark. (http://server.arcgisonline.com/arcgis/rest/services/)
+        :param map_type: Desired map type, currently supports:
+            world_imagery,
+            world_hillshade,
+            world_hillshade_dark. (http://server.arcgisonline.com/arcgis/rest/services/)
         :type map_type: str
-        :return: Desired image as Numpy Array, tile x-value, tile y-value,
+        :return: Desired image as base64, tile x-value, tile y-value,
             zoomlevel of retrieved image.
-        :rtype: numpy.ndarray, tuple, tuple, int
+        :rtype: str, int, int, int
 
         .. note::
             When an image on the desired zoom level is not available,
                 there will be searched for a lower resolution image. Desired zoomlevel is not guaranteed.
-
         """
 
         if zoom < 0 or zoom > 23:
@@ -97,14 +140,13 @@ class Satellite_data():
 
         image_url = f"{self.base_url}/{self.tile_maps[map_type]}/MapServer/tile/{zoom}/{tile_y}/{tile_x}"
 
-        with urlopen(image_url) as image_file:
-            image = imread(image_file, "jpeg")
+        response = requests.get(image_url)
+        image = str(base64.b64encode(response.content), 'utf-8')
 
-            img_average = image.mean(axis=0).mean(axis=0)[0:3]
-            if all(img_average == self.notfound_avg):
-                return self.get_zoom_level_image(lat, lon, zoom - 1, map_type)
+        if image == self.not_found_img:
+            return self.get_zoom_level_image(lat, lon, zoom - 1, map_type)
 
-            return (image, tile_x, tile_y, zoom)
+        return (image, tile_x, tile_y, zoom)
 
     def long_to_tile_X(self, lon, zoom):
         """Calculate tile x-value based on longitude and zoom value.
@@ -129,10 +171,14 @@ class Satellite_data():
         :rtype: int
         """
 
-        return math.floor((1-math.log(math.tan(lat*math.pi/180) + 1/math.cos(lat*math.pi/180))/math.pi)/2 * math.pow(2, zoom))
+        return math.floor(
+            (1 - math.log(
+                math.tan(lat * math.pi / 180) + 1 / math.cos(lat * math.pi / 180)
+            ) / math.pi) / 2 * math.pow(2, zoom)
+        )
 
     def get_top_left_bound(self, tile_x, tile_y, zoom):
-        """ Get top left boud of image.
+        """ Get top left bound of an image.
 
         :param tile_x: Tile x value. Can be calculated with `long_to_tile_X`.
         :type tile_x: int
@@ -141,7 +187,7 @@ class Satellite_data():
         :param zoom: Zoom level of image.
         :type zoom: int
         :return: Top left bound (lat, lon) values
-        :rtype: float
+        :rtype: (float, float)
         """
         n = 2.0 ** zoom
         lon_deg = tile_x / n * 360.0 - 180.0
@@ -159,45 +205,73 @@ class Satellite_data():
         :param zoom: Zoom level of image.
         :type zoom: int
         :return: Top left bound (lat, lon) values, bottom right (lat, lon) values.
-        :rtype: float, float
+        :rtype: ((float, float), (float, float))
         """
         top_left = self.get_top_left_bound(tile_x, tile_y, zoom)
         bottom_right = self.get_top_left_bound(tile_x + 1, tile_y + 1, zoom)
         return (top_left, bottom_right)
 
-
     def get_lat_lng_from_pixel(self, loc, bound_top_left, bound_bottom_right, img_size=256):
-        x_left = bound_top_left['lon'];
-        y_top = bound_top_left['lat'];
-        x_right = bound_bottom_right['lon'];
-        y_bottom = bound_bottom_right['lat'];
+        """ Converts a pixel value to a lat/lng.
 
-        x_range = abs(x_right - x_left);
-        y_range = abs(y_top - y_bottom);
+        This function turns a pixel value into a latitude or longitude
+        based on the top left bound and bottom right bound of the tile.
+
+        :param loc: The pixel's location in the tile.
+        :type loc: dict
+        :param bound_top_left: The top left bound of the tile.
+        :type bound_top_left: dict
+        :param bound_bottom_right: The bottom right bound of the tile.
+        :type bound_bottom_right: dict
+        :param img_size: The size of the tile.
+        :type img_size: int
+        :return: The lat long coordinates of this pixel.
+        :rtype: dict
+        """
+        x_left = bound_top_left['lon']
+        y_top = bound_top_left['lat']
+        x_right = bound_bottom_right['lon']
+        y_bottom = bound_bottom_right['lat']
+
+        x_range = abs(x_right - x_left)
+        y_range = abs(y_top - y_bottom)
 
         x = loc['x']
         y = loc['y']
 
-        lon = x_left + ((x / img_size) * x_range);
-        lat = y_bottom - ((y / img_size) * y_range);
+        lon = x_left + ((x / img_size) * x_range)
+        lat = y_bottom - ((y / img_size) * y_range)
 
         return {
             'lat': lat,
             'lon': lon,
-        };
-
+        }
 
     def get_box_lat_lng(self, box, bound_top_left, bound_bottom_right):
+        """ Retrieve a box's lat long coordinates.
+
+        This function turns 4 pixel points inside a tile into
+        a lat long representation of a square.
+
+        :param box: The box's pixel values
+        :type box: dict
+        :param bound_top_left: The top left bound of the tile.
+        :type bound_top_left: dict
+        :param bound_bottom_right: The bottom right bound of the tile.
+        :type bound_bottom_right: dict
+        :return: A box in lat long representation.
+        :rtype: dict
+        """
         top_left = self.get_lat_lng_from_pixel(
             { 'x': box['x1'], 'y': box['y1'] },
             bound_top_left,
             bound_bottom_right,
-        );
+        )
         bottom_right = self.get_lat_lng_from_pixel(
             { 'x': box['x2'], 'y': box['y2'] },
             bound_top_left,
             bound_bottom_right,
-        );
+        )
 
         return {
             'top_left': {
@@ -210,9 +284,8 @@ class Satellite_data():
             }
         }
 
-
     def get_pixel_location(self, loc, bound_top_left, bound_bottom_right, img_size=256):
-        """ Get pixel location of given  (lat,lon) location in given bounds
+        """ Get pixel location of given  (lat,lon) location in given bounds.
 
         :param loc: Latitude and Longitude to get pixel location for.
         :type loc: tuple
