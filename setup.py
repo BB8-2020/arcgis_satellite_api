@@ -2,7 +2,10 @@ from setuptools import find_packages, setup
 
 install_requires = [
     'pillow',
-    'matplotlib'
+    'matplotlib',
+    'pytest',
+    'requests',
+    'numpy'
 ]
 
 setup(
