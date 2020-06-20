@@ -123,9 +123,9 @@ class Satellite_data():
             world_hillshade,
             world_hillshade_dark. (http://server.arcgisonline.com/arcgis/rest/services/)
         :type map_type: str
-        :return: Desired image as Numpy Array, tile x-value, tile y-value,
+        :return: Desired image as base64, tile x-value, tile y-value,
             zoomlevel of retrieved image.
-        :rtype: numpy.ndarray, tuple, tuple, int
+        :rtype: str, int, int, int
 
         .. note::
             When an image on the desired zoom level is not available,
@@ -178,7 +178,7 @@ class Satellite_data():
         )
 
     def get_top_left_bound(self, tile_x, tile_y, zoom):
-        """ Get top left boud of image.
+        """ Get top left bound of an image.
 
         :param tile_x: Tile x value. Can be calculated with `long_to_tile_X`.
         :type tile_x: int
@@ -187,7 +187,7 @@ class Satellite_data():
         :param zoom: Zoom level of image.
         :type zoom: int
         :return: Top left bound (lat, lon) values
-        :rtype: float
+        :rtype: (float, float)
         """
         n = 2.0 ** zoom
         lon_deg = tile_x / n * 360.0 - 180.0
@@ -205,7 +205,7 @@ class Satellite_data():
         :param zoom: Zoom level of image.
         :type zoom: int
         :return: Top left bound (lat, lon) values, bottom right (lat, lon) values.
-        :rtype: float, float
+        :rtype: ((float, float), (float, float))
         """
         top_left = self.get_top_left_bound(tile_x, tile_y, zoom)
         bottom_right = self.get_top_left_bound(tile_x + 1, tile_y + 1, zoom)
