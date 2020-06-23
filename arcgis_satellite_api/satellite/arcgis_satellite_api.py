@@ -100,7 +100,11 @@ class Satellite_data():
             if not os.path.isdir(f"{self.data_folder}images"):
                 os.mkdir(f"{self.data_folder}images")
 
-            filename = f"{self.data_folder}images/{map_type}_{tile_x}_{tile_y}_{zoom}.jpeg"
+            if map_type != "world_imagery":  # If map_type is non-default
+                filename = f"{self.data_folder}images/{map_type}_{tile_x}_{tile_y}_{zoom}.jpeg"
+            else:
+                filename = f"{self.data_folder}images/{tile_x}_{tile_y}_{zoom}.jpeg"
+
             with open(filename, 'wb') as f:
                 f.write(base64.b64decode(image))
 
@@ -264,12 +268,12 @@ class Satellite_data():
         :rtype: dict
         """
         top_left = self.get_lat_lng_from_pixel(
-            { 'x': box['x1'], 'y': box['y1'] },
+            {'x': box['x1'], 'y': box['y1']},
             bound_top_left,
             bound_bottom_right,
         )
         bottom_right = self.get_lat_lng_from_pixel(
-            { 'x': box['x2'], 'y': box['y2'] },
+            {'x': box['x2'], 'y': box['y2']},
             bound_top_left,
             bound_bottom_right,
         )
